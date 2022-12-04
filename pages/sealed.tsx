@@ -1,9 +1,9 @@
 import { useState } from "react";
 import type { NextPage, GetStaticProps } from "next";
 import Image from "next/image";
-import { cache } from "../lib/cache";
 import { useEffect } from "react";
 import io from "socket.io-client";
+import { cardRatings, CardRating } from "../lib/card-ratings";
 let socket;
 
 const Home: NextPage<{ colorPairRatings: CardRating[][] }> = ({
@@ -121,12 +121,7 @@ const Home: NextPage<{ colorPairRatings: CardRating[][] }> = ({
           ))}
       </ul>
       <h1>deck</h1>
-      {sealed && colorPairRatings && (
-        <CardList>
-          {/*sealed.CourseDeck.MainDeck.map(({ cardId }) => cardId)*/}
-          {sealed.CardPool}
-        </CardList>
-      )}
+      {sealed && colorPairRatings && <CardList>{sealed.CardPool}</CardList>}
     </>
   );
 };
@@ -134,89 +129,13 @@ const Home: NextPage<{ colorPairRatings: CardRating[][] }> = ({
 const colorPairs = ["WU", "WB", "WR", "WG", "UB", "UR", "UG", "BR", "BG", "RG"];
 
 export const getStaticProps: GetStaticProps = async () => {
-  const colorPairRatings = await cache("colorPairRatings", () =>
-    Promise.all(
-      colorPairs.map((colors) =>
-        fetch(
-          `https://www.17lands.com/card_ratings/data?expansion=BRO&format=PremierDraft&colors=${colors}`
-        ).then((res) => res.json())
-      )
-    )
-  );
-
   return {
     props: {
-      colorPairRatings: colorPairRatings.map((cardRatings: CardRating[]) =>
-        cardRatings.map((cardRating: CardRating, index: number) => ({
-          ...cardRating,
-          arena_id:
-            index +
-            82485 +
-            (index >= 163 ? 1 : 0) +
-            (index >= 238 ? 1 : 0) +
-            (index >= 256 ? 1 : 0) +
-            (index >= 267 ? 45 : 0),
-        }))
+      colorPairRatings: await Promise.all(
+        colorPairs.map((colors: string) => cardRatings({ colors }))
       ),
     },
   };
 };
-
-interface CardRating {
-  seen_count: number;
-  avg_seen: number;
-  pick_count: number;
-  avg_pick: number;
-  game_count: number;
-  win_rate: number;
-  sideboard_game_count: number;
-  sideboard_win_rate: number;
-  opening_hand_game_count: number;
-  opening_hand_win_rate: number;
-  drawn_game_count: number;
-  drawn_win_rate: number;
-  ever_drawn_game_count: number;
-  ever_drawn_win_rate: number;
-  never_drawn_game_count: number;
-  never_drawn_win_rate: number;
-  drawn_improvement_win_rate: number;
-  name: string;
-  color: Color;
-  rarity: Rarity;
-  url: string;
-  url_back: string;
-  arena_id?: number;
-}
-
-type Color =
-  | ""
-  | "W"
-  | "U"
-  | "B"
-  | "R"
-  | "G"
-  | "WU"
-  | "UB"
-  | "BR"
-  | "RG"
-  | "WG"
-  | "WB"
-  | "UR"
-  | "BG"
-  | "WR"
-  | "UG"
-  | "WBR"
-  | "URG"
-  | "WRG"
-  | "WUR"
-  | "UBR"
-  | "BRG"
-  | "WUG"
-  | "WUB"
-  | "UBG"
-  | "WBG"
-  | "WUBRG";
-
-type Rarity = "mythic" | "rare" | "uncommon" | "common" | "basic";
 
 export default Home;

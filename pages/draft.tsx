@@ -1,9 +1,9 @@
 import { useState } from "react";
 import type { NextPage, GetStaticProps } from "next";
 import Image from "next/image";
-import { cache } from "../lib/cache";
 import { useEffect } from "react";
 import io from "socket.io-client";
+import { cardRatings, CardRating } from "../lib/card-ratings";
 let socket;
 
 const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
@@ -103,83 +103,11 @@ const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
 };
 
 export const getStaticProps: GetStaticProps = async () => {
-  const cardRatings = await cache("card-ratings", () =>
-    fetch(
-      "https://www.17lands.com/card_ratings/data?expansion=BRO&format=PremierDraft"
-    ).then((res) => res.json())
-  );
-
   return {
     props: {
-      cardRatings: cardRatings.map((cardRating: CardRating, index: number) => ({
-        ...cardRating,
-        arena_id:
-          index +
-          82485 +
-          (index >= 163 ? 1 : 0) +
-          (index >= 238 ? 1 : 0) +
-          (index >= 256 ? 1 : 0) +
-          (index >= 267 ? 45 : 0),
-      })),
+      cardRatings: await cardRatings(),
     },
   };
 };
-
-interface CardRating {
-  seen_count: number;
-  avg_seen: number;
-  pick_count: number;
-  avg_pick: number;
-  game_count: number;
-  win_rate: number;
-  sideboard_game_count: number;
-  sideboard_win_rate: number;
-  opening_hand_game_count: number;
-  opening_hand_win_rate: number;
-  drawn_game_count: number;
-  drawn_win_rate: number;
-  ever_drawn_game_count: number;
-  ever_drawn_win_rate: number;
-  never_drawn_game_count: number;
-  never_drawn_win_rate: number;
-  drawn_improvement_win_rate: number;
-  name: string;
-  color: Color;
-  rarity: Rarity;
-  url: string;
-  url_back: string;
-  arena_id?: number;
-}
-
-type Color =
-  | ""
-  | "W"
-  | "U"
-  | "B"
-  | "R"
-  | "G"
-  | "WU"
-  | "UB"
-  | "BR"
-  | "RG"
-  | "WG"
-  | "WB"
-  | "UR"
-  | "BG"
-  | "WR"
-  | "UG"
-  | "WBR"
-  | "URG"
-  | "WRG"
-  | "WUR"
-  | "UBR"
-  | "BRG"
-  | "WUG"
-  | "WUB"
-  | "UBG"
-  | "WBG"
-  | "WUBRG";
-
-type Rarity = "mythic" | "rare" | "uncommon" | "common" | "basic";
 
 export default Home;

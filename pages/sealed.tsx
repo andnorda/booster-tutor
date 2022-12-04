@@ -1,9 +1,9 @@
 import { useState } from "react";
 import type { NextPage, GetStaticProps } from "next";
-import Image from "next/image";
 import { useEffect } from "react";
 import io from "socket.io-client";
 import { cardRatings, CardRating } from "../lib/card-ratings";
+import Card from "../components/Card";
 let socket;
 
 const Home: NextPage<{ colorPairRatings: CardRating[][] }> = ({
@@ -31,32 +31,8 @@ const Home: NextPage<{ colorPairRatings: CardRating[][] }> = ({
         .sort((a, b) => b.ever_drawn_win_rate - a.ever_drawn_win_rate)
         .map((card: CardRating, i) => (
           <>
-            <li
-              key={`${card.name},${i}`}
-              style={{
-                position: "relative",
-              }}
-            >
-              <Image
-                src={card.url}
-                width={480 / 3}
-                height={680 / 3}
-                alt={card.name}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  top: "33%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  fontSize: 42,
-                  textShadow: "0 0 2px black",
-                }}
-              >
-                {(Math.round(card.ever_drawn_win_rate * 10000) / 100).toFixed(
-                  2
-                )}
-              </div>
+            <li key={`${card.name},${i}`}>
+              <Card {...card} />
             </li>
             {i === 22 && <div>hmmmm</div>}
           </>

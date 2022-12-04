@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { NextPage, GetStaticProps } from "next";
-import Image from "next/image";
 import { cardRatings, CardRating } from "../lib/card-ratings";
+import Card from "../components/Card";
 
 const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
   const [selectedRarities, setSelectedRarities] = useState([
@@ -83,32 +83,12 @@ const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
             <li
               key={card.name}
               style={{
-                position: "relative",
                 display: card.name.toLowerCase().includes(filter.toLowerCase())
                   ? "block"
                   : "none",
               }}
             >
-              <Image
-                src={card.url}
-                width={480 / 3}
-                height={680 / 3}
-                alt={card.name}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  top: "33%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  fontSize: 42,
-                  textShadow: "0 0 2px black",
-                }}
-              >
-                {(Math.round(card.ever_drawn_win_rate * 10000) / 100).toFixed(
-                  2
-                )}
-              </div>
+              <Card {...card} />
             </li>
           ))}
       </ul>

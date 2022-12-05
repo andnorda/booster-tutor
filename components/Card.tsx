@@ -4,10 +4,13 @@ const Card = ({
   url,
   name,
   ever_drawn_win_rate,
+  selectedColors,
+  ...rest
 }: {
   url: string;
   name: string;
   ever_drawn_win_rate: number;
+  selectedColors: string;
 }) => (
   <div
     style={{
@@ -25,8 +28,26 @@ const Card = ({
         textShadow: "0 0 2px black",
       }}
     >
-      {(Math.round(ever_drawn_win_rate * 10000) / 100).toFixed(2)}
+      {selectedColors
+        ? (
+            Math.round(rest[selectedColors].ever_drawn_win_rate * 10000) / 100
+          ).toFixed(2)
+        : (Math.round(ever_drawn_win_rate * 10000) / 100).toFixed(2)}
     </div>
+    {selectedColors && (
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          fontSize: 30,
+          textShadow: "0 0 2px black",
+        }}
+      >
+        ({(Math.round(ever_drawn_win_rate * 10000) / 100).toFixed(2)})
+      </div>
+    )}
   </div>
 );
 

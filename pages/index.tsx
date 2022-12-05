@@ -20,6 +20,7 @@ const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
     "colorless",
   ]);
   const [filter, setFilter] = useState("");
+
   return (
     <>
       <input
@@ -78,7 +79,6 @@ const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
                   .split("")
                   .every((color) => selectedColors.includes(color))
           )
-          .sort((a, b) => b.ever_drawn_win_rate - a.ever_drawn_win_rate)
           .map((card) => (
             <li
               key={card.name}
@@ -99,7 +99,9 @@ const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
 export const getStaticProps: GetStaticProps = async () => {
   return {
     props: {
-      cardRatings: await cardRatings(),
+      cardRatings: (await cardRatings()).sort(
+        (a, b) => b.ever_drawn_win_rate - a.ever_drawn_win_rate
+      ),
     },
   };
 };

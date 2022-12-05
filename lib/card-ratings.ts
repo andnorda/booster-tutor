@@ -8,7 +8,7 @@ interface CardRatingsQueryParams {
 }
 
 export const cardRatings: (
-  params: CardRatingsQueryParams
+  params?: CardRatingsQueryParams
 ) => Promise<CardRating[]> = async ({
   expansion = "BRO",
   format = "PremierDraft",

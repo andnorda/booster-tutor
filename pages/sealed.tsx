@@ -6,11 +6,47 @@ import { cardRatings, CardRating } from "../lib/card-ratings";
 import Card from "../components/Card";
 let socket;
 
-const Home: NextPage<{ colorPairRatings: CardRating[][] }> = ({
+interface Rating {
+  ever_drawn_win_rate: number;
+}
+
+interface Card extends Rating {
+  url: string;
+  name: string;
+  arena_id: number;
+  WU: Rating | null;
+  WB: Rating | null;
+  WR: Rating | null;
+  WG: Rating | null;
+  UB: Rating | null;
+  UR: Rating | null;
+  UG: Rating | null;
+  BR: Rating | null;
+  BG: Rating | null;
+  RG: Rating | null;
+}
+
+type ColorPair =
+  | "WU"
+  | "WB"
+  | "WR"
+  | "WG"
+  | "UB"
+  | "UR"
+  | "UG"
+  | "BR"
+  | "BG"
+  | "RG";
+
+const Home: NextPage<{ colorPairRatings: CardRating[][]; cards: Card[] }> = ({
   colorPairRatings,
+  cards,
 }) => {
-  const [selectedColors, setSelectedColors] = useState(colorPairs[0]);
-  const CardList = ({ children }) => (
+  const [selectedColors, setSelectedColors] = useState<ColorPair>(
+    colorPairs[0]
+  );
+
+  const CardList = ({ children }: { children: Card[] }) => (
     <ul
       style={{
         display: "flex",
@@ -21,18 +57,16 @@ const Home: NextPage<{ colorPairRatings: CardRating[][] }> = ({
       }}
     >
       {children
-        .map(
-          (n) =>
-            colorPairRatings[colorPairs.indexOf(selectedColors)].find(
-              ({ arena_id }) => arena_id === n
-            ) ?? colorPairRatings[0][0]
+        .filter((card) => card[selectedColors])
+        .sort(
+          (a, b) =>
+            b[selectedColors].ever_drawn_win_rate -
+            a[selectedColors].ever_drawn_win_rate
         )
-        .filter((card) => card.game_count > 100)
-        .sort((a, b) => b.ever_drawn_win_rate - a.ever_drawn_win_rate)
         .map((card: CardRating, i) => (
           <>
             <li key={`${card.name},${i}`}>
-              <Card {...card} />
+              <Card {...card} selectedColors={selectedColors} />
             </li>
             {i === 22 && <div>hmmmm</div>}
           </>
@@ -58,20 +92,19 @@ const Home: NextPage<{ colorPairRatings: CardRating[][] }> = ({
   };
 
   const [sealed, setSealed] = useState();
+  console.log(sealed?.CardPool);
 
-  const winRates = colorPairs.map((color) =>
+  const winRate = (colorPair: string) =>
     sealed?.CardPool.map(
-      (n) =>
-        colorPairRatings[colorPairs.indexOf(color)].find(
-          ({ arena_id }) => arena_id === n
+      (arena_id: number) =>
+        colorPairRatings[colorPairs.indexOf(colorPair)].find(
+          (cardRating) => cardRating.arena_id === arena_id
         ) ?? colorPairRatings[0][0]
     )
-      .filter((card) => card.game_count > 1000)
+      .filter((card) => card.game_count > 500)
       .sort((a, b) => b.ever_drawn_win_rate - a.ever_drawn_win_rate)
       .slice(0, 23)
-      .map((e, i, a) => (i === 0 && console.log(a), e))
-      .reduce((acc, curr) => acc + curr.ever_drawn_win_rate, 0)
-  );
+      .reduce((acc, curr) => acc + curr.ever_drawn_win_rate, 0);
 
   return (
     <>
@@ -79,7 +112,7 @@ const Home: NextPage<{ colorPairRatings: CardRating[][] }> = ({
         {colorPairs
           .map((colorPair, i) => ({
             colorPair,
-            winRate: winRates[i],
+            winRate: winRate(colorPair),
           }))
           .sort((a, b) => b.winRate - a.winRate)
           .map(({ colorPair: color, winRate }, i) => (
@@ -91,24 +124,65 @@ const Home: NextPage<{ colorPairRatings: CardRating[][] }> = ({
                   checked={color === selectedColors}
                   onChange={() => setSelectedColors(color)}
                 />
-                {color}({winRate})
+                {color} ({winRate})
               </label>
             </li>
           ))}
       </ul>
       <h1>deck</h1>
-      {sealed && colorPairRatings && <CardList>{sealed.CardPool}</CardList>}
+      {sealed && colorPairRatings && (
+        <CardList>
+          {sealed.CardPool.map(
+            (arena_id: number) =>
+              cards.find((card) => card.arena_id === arena_id) ?? cards[0]
+          )}
+        </CardList>
+      )}
     </>
   );
 };
 
-const colorPairs = ["WU", "WB", "WR", "WG", "UB", "UR", "UG", "BR", "BG", "RG"];
+const colorPairs: ColorPair[] = [
+  "WU",
+  "WB",
+  "WR",
+  "WG",
+  "UB",
+  "UR",
+  "UG",
+  "BR",
+  "BG",
+  "RG",
+];
 
 export const getStaticProps: GetStaticProps = async () => {
+  const colorPairRatings = await Promise.all(
+    colorPairs.map((colors: string) => cardRatings({ colors }))
+  );
+
   return {
     props: {
-      colorPairRatings: await Promise.all(
-        colorPairs.map((colors: string) => cardRatings({ colors }))
+      colorPairRatings,
+      cards: (await cardRatings()).map(
+        ({ name, url, arena_id, ever_drawn_win_rate }, i) => ({
+          name,
+          url,
+          arena_id,
+          ever_drawn_win_rate,
+          ...colorPairs.reduce(
+            (acc, colorPair, j) => ({
+              ...acc,
+              [colorPair]:
+                colorPairRatings[j][i].game_count > 1000
+                  ? {
+                      ever_drawn_win_rate:
+                        colorPairRatings[j][i].ever_drawn_win_rate,
+                    }
+                  : null,
+            }),
+            {}
+          ),
+        })
       ),
     },
   };

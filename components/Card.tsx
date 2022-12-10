@@ -5,6 +5,7 @@ const Card = ({
   name,
   ever_drawn_win_rate,
   selectedColors,
+  small = false,
   ...rest
 }: {
   url: string;
@@ -15,16 +16,22 @@ const Card = ({
   <div
     style={{
       position: "relative",
+      color: "white",
     }}
   >
-    <Image src={url} width={480 / 3} height={680 / 3} alt={name} />
+    <Image
+      src={url}
+      width={480 / (small ? 6 : 3)}
+      height={680 / (small ? 6 : 3)}
+      alt={name}
+    />
     <div
       style={{
         position: "absolute",
         top: "33%",
         left: "50%",
         transform: "translate(-50%, -50%)",
-        fontSize: 42,
+        fontSize: small ? 24 : 42,
         textShadow: "0 0 2px black",
       }}
     >
@@ -41,7 +48,7 @@ const Card = ({
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          fontSize: 30,
+          fontSize: small ? 18 : 30,
           textShadow: "0 0 2px black",
         }}
       >

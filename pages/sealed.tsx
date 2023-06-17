@@ -101,7 +101,7 @@ const Home: NextPage<{ colorPairRatings: CardRating[][]; cards: Card[] }> = ({
           (cardRating) => cardRating.arena_id === arena_id
         ) ?? colorPairRatings[0][0]
     )
-      .filter((card) => card.game_count > 500)
+      .filter((card) => card.game_count > 100)
       .sort((a, b) => b.ever_drawn_win_rate - a.ever_drawn_win_rate)
       .slice(0, 23)
       .reduce((acc, curr) => acc + curr.ever_drawn_win_rate, 0);
@@ -173,7 +173,7 @@ export const getStaticProps: GetStaticProps = async () => {
             (acc, colorPair, j) => ({
               ...acc,
               [colorPair]:
-                colorPairRatings[j][i].game_count > 1000
+                colorPairRatings[j][i].game_count > 100
                   ? {
                       ever_drawn_win_rate:
                         colorPairRatings[j][i].ever_drawn_win_rate,

@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { Server } from "socket.io";
 import TailFile from "@logdna/tail-file";
+import { clientEvent } from "../../lib/game-state";
 
 const socketHandler = (_: NextApiRequest, res: NextApiResponse) => {
   if (res.socket.server.io) {
@@ -32,20 +33,33 @@ const socketHandler = (_: NextApiRequest, res: NextApiResponse) => {
             );
             draftDeck && io.emit("draft-deck", draftDeck);
             const sealedDeck = decks.find((c: any) =>
-              c.InternalEventName.startsWith("Trad_Sealed_BRO")
+              c.InternalEventName.startsWith("QualifierWeekend_Day1")
             );
             sealedDeck && io.emit("sealed-deck", sealedDeck);
           } else {
-            const testMatch = [
+            const gameUpdateMatch = [
               ...chunk.matchAll(
-                /\[UnityCrossThreadLogger\]==> Deck_UpsertDeckV2 (.*)/g
+                /{.*"greToClientEvent": { "greToClientMessages": \[ {.*}/g
               ),
             ][0];
-            if (testMatch) {
+            if (gameUpdateMatch) {
+              const messages = JSON.parse(gameUpdateMatch[0]).greToClientEvent
+                .greToClientMessages;
+              messages.forEach(clientEvent);
               io.emit(
-                "test-deck",
-                JSON.parse(JSON.parse(JSON.parse(testMatch[1]).request).Payload)
+                "game-update",
+                messages
+                  .map((message) => message.gameStateMessage)
+                  .filter((m) => m)
+                  .filter((m) => m.type === "GameStateType_Diff")
               );
+              if (
+                messages.find(
+                  (message) => message.type === "GREMessageType_SubmitDeckReq"
+                )
+              ) {
+                io.emit("start-sideboard");
+              }
             }
           }
         }

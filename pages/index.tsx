@@ -3,6 +3,8 @@ import type { NextPage, GetStaticProps } from "next";
 import { cardRatings, CardRating } from "../lib/card-ratings";
 import Card from "../components/Card";
 
+const decks = ["WU", "WB", "WR", "WG", "UB", "UR", "UG", "BR", "BG", "RG"];
+
 const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
   const [selectedRarities, setSelectedRarities] = useState([
     "mythic",
@@ -20,6 +22,7 @@ const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
     "colorless",
   ]);
   const [filter, setFilter] = useState("");
+  const [selectedDeck, setSelectedDeck] = useState<string>();
 
   return (
     <>
@@ -61,6 +64,20 @@ const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
           {color}
         </label>
       ))}
+      <select
+        value={selectedDeck}
+        onChange={(e) =>
+          setSelectedDeck(
+            e.target.value === "Select deck" ? undefined : e.target.value
+          )
+        }
+      >
+        {["Select deck", ...decks].map((deck) => (
+          <option key={deck} value={deck}>
+            {deck}
+          </option>
+        ))}
+      </select>
       <ul
         style={{
           display: "flex",
@@ -79,7 +96,20 @@ const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
                   .split("")
                   .every((color) => selectedColors.includes(color))
           )
-          .map((card) => (
+          .filter((card) =>
+            selectedDeck
+              ? card.color === "" ||
+                card.color
+                  .split("")
+                  .some((color) => selectedDeck.split("").includes(color))
+              : true
+          )
+          .sort((a, b) =>
+            selectedDeck
+              ? b[selectedDeck] - a[selectedDeck]
+              : b.ever_drawn_win_rate - a.ever_drawn_win_rate
+          )
+          .map((card, i) => (
             <li
               key={card.name}
               style={{
@@ -88,7 +118,7 @@ const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
                   : "none",
               }}
             >
-              <Card {...card} />
+              <Card {...card} selectedDeck={selectedDeck} />
             </li>
           ))}
       </ul>
@@ -97,11 +127,30 @@ const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
 };
 
 export const getStaticProps: GetStaticProps = async () => {
+  const deckRatings = (
+    await Promise.all(decks.map((deck) => cardRatings({ colors: deck })))
+  ).reduce(
+    (prev, curr, i) => ({
+      ...prev,
+      [decks[i]]: curr,
+    }),
+    {}
+  );
   return {
     props: {
-      cardRatings: (await cardRatings()).sort(
-        (a, b) => b.ever_drawn_win_rate - a.ever_drawn_win_rate
-      ),
+      cardRatings: (await cardRatings()).map((c, i) => ({
+        ...c,
+        ...decks.reduce(
+          (prev, curr) => ({
+            ...prev,
+            [curr]:
+              deckRatings[curr][i].ever_drawn_game_count > 200
+                ? deckRatings[curr][i].ever_drawn_win_rate
+                : 0,
+          }),
+          {}
+        ),
+      })),
     },
   };
 };

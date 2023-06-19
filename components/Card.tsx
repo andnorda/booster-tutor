@@ -12,6 +12,7 @@ const Card = ({
   selectedColors,
   selectedDeck,
   small = false,
+  override,
   ...rest
 }: {
   url: string;
@@ -20,13 +21,17 @@ const Card = ({
   selectedColors: string;
   selectedDeck?: string;
   small?: boolean;
+  override?: number;
 }) => (
   <>
     <div
       data-tooltip-id={`${url}-tooltip-id`}
       data-tooltip-content={decks
+        .filter((deck) => rest.color.split("").some((c) => deck.includes(c)))
         .filter((deck) => rest[deck])
-        .map((deck) => `${deck}: ${p(rest[deck])}`)
+        .map(
+          (deck) => `${deck}: ${p(rest[deck] - rest.colorPerformance[deck])}`
+        )
         .join(", ")}
       data-tooltip-place="top"
       style={{
@@ -51,7 +56,9 @@ const Card = ({
           textShadow: "0 0 2px black",
         }}
       >
-        {selectedColors
+        {override
+          ? p(override)
+          : selectedColors
           ? p(selectedDeck ? rest[selectedDeck] : ever_drawn_win_rate)
           : p(selectedDeck ? rest[selectedDeck] : ever_drawn_win_rate)}
       </div>

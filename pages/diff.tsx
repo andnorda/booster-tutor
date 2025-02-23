@@ -48,7 +48,6 @@ const Home: NextPage<{ cardRatings: CardRating[]; colorPerformance: any }> = ({
   ]);
   const [filter, setFilter] = useState("");
   const [selectedDeck, setSelectedDeck] = useState<string>();
-  console.log(colorPerformance);
 
   return (
     <>

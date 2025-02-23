@@ -1,3 +1,4 @@
+import { addDays, format, subYears } from "date-fns";
 import cache from "./cache";
 import queryString from "query-string";
 
@@ -7,13 +8,13 @@ interface CardRatingsQueryParams {
 
 export const colorPerformance: (
   params?: CardRatingsQueryParams
-) => Promise<ColorPerformance[]> = async ({ expansion = "DSK" } = {}) => {
+) => Promise<ColorPerformance[]> = async ({ expansion = "DFT" } = {}) => {
   const query = queryString.stringify({
     expansion,
     event_type: "PremierDraft",
     combine_splash: true,
-    start_date: "2024-09-24",
-    end_date: "2024-10-03",
+    start_date: format(subYears(new Date(), 1), "yyyy-MM-dd"),
+    end_date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
   });
 
   return await cache(query, async () => {

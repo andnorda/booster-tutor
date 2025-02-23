@@ -4,7 +4,20 @@ import Card from "../components/Card";
 import { CardRating, cardRatings } from "../lib/card-ratings";
 import { colorPerformance } from "../lib/color-performance";
 
-const decks = ["WU", "WB", "WR", "WG", "UB", "UR", "UG", "BR", "BG", "RG"];
+const decks = [
+  "WU",
+  "WB",
+  "WR",
+  "WG",
+  "UB",
+  "UR",
+  "UG",
+  "BR",
+  "BG",
+  "RG",
+] as const;
+
+type Deck = typeof decks[number];
 
 const Home: NextPage<{ cardRatings: CardRating[]; colorPerformance: any }> = ({
   cardRatings,
@@ -26,8 +39,10 @@ const Home: NextPage<{ cardRatings: CardRating[]; colorPerformance: any }> = ({
     "colorless",
   ]);
   const [filter, setFilter] = useState("");
-  const [selectedDeck, setSelectedDeck] = useState<string>();
+  const [selectedDeck, setSelectedDeck] = useState<Deck>();
   const [isDiff, setIsDiff] = useState(true);
+
+  console.log(colorPerformance);
 
   return (
     <>
@@ -73,7 +88,9 @@ const Home: NextPage<{ cardRatings: CardRating[]; colorPerformance: any }> = ({
         value={selectedDeck}
         onChange={(e) =>
           setSelectedDeck(
-            e.target.value === "Select deck" ? undefined : e.target.value
+            e.target.value === "Select deck"
+              ? undefined
+              : (e.target.value as Deck)
           )
         }
       >
@@ -156,7 +173,9 @@ export const getStaticProps: GetStaticProps = async () => {
       ...prev,
       [decks[i]]: curr,
     }),
-    {}
+    {} as {
+      [deck in Deck]: CardRating[];
+    }
   );
   return {
     props: {
@@ -165,8 +184,7 @@ export const getStaticProps: GetStaticProps = async () => {
         .reduce(
           (prev, curr) => ({
             ...prev,
-            [curr.color_name
-              .match(/\((.+)\)/)[1]
+            [(curr.color_name.match(/\((.+)\)/)?.at(1) ?? "")
               .split("")
               .sort((a, b) => {
                 const order = "WUBRG";

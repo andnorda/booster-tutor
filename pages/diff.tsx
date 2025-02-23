@@ -14,10 +14,23 @@ const Home: NextPage<{ cardRatings: CardRating[]; colorPerformance: any }> = ({
     const ns = decks
       .filter((deck) => n.color.split("").some((c) => deck.includes(c)))
       .map((deck) => n[deck] - colorPerformance[deck])
-      .filter(Boolean);
+      .filter((n) => Math.abs(n) < 0.5);
 
-    return Math.max(...ns) - Math.min(...ns);
+    const res = Math.max(...ns) - Math.min(...ns);
+
+    if (res > 0.5) {
+      console.log(
+        JSON.stringify({
+          decks,
+          ns,
+          res,
+        })
+      );
+    }
+
+    return res;
   };
+
   const [selectedRarities, setSelectedRarities] = useState([
     "mythic",
     "rare",

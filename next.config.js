@@ -14,6 +14,11 @@ const nextConfig = {
         hostname: "cards.scryfall.io",
         pathname: "/border_crop/front/**",
       },
+      {
+        protocol: "https",
+        hostname: "cards.scryfall.io",
+        pathname: "/large/front/**",
+      },
     ],
   },
 };

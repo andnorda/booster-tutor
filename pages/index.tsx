@@ -1,11 +1,15 @@
+import type { GetStaticProps, NextPage } from "next";
 import { useState } from "react";
-import type { NextPage, GetStaticProps } from "next";
-import { cardRatings, CardRating } from "../lib/card-ratings";
 import Card from "../components/Card";
+import { CardRating, cardRatings } from "../lib/card-ratings";
+import { colorPerformance } from "../lib/color-performance";
 
 const decks = ["WU", "WB", "WR", "WG", "UB", "UR", "UG", "BR", "BG", "RG"];
 
-const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
+const Home: NextPage<{ cardRatings: CardRating[]; colorPerformance: any }> = ({
+  cardRatings,
+  colorPerformance,
+}) => {
   const [selectedRarities, setSelectedRarities] = useState([
     "mythic",
     "rare",
@@ -23,6 +27,7 @@ const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
   ]);
   const [filter, setFilter] = useState("");
   const [selectedDeck, setSelectedDeck] = useState<string>();
+  const [isDiff, setIsDiff] = useState(true);
 
   return (
     <>
@@ -78,6 +83,14 @@ const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
           </option>
         ))}
       </select>
+      <label>
+        <input
+          type="checkbox"
+          checked={isDiff}
+          onChange={(e) => setIsDiff(!isDiff)}
+        />
+        diff?
+      </label>
       <ul
         style={{
           display: "flex",
@@ -118,7 +131,16 @@ const Home: NextPage<{ cardRatings: CardRating[] }> = ({ cardRatings }) => {
                   : "none",
               }}
             >
-              <Card {...card} selectedDeck={selectedDeck} />
+              <Card
+                {...card}
+                selectedDeck={selectedDeck}
+                override={
+                  isDiff && selectedDeck
+                    ? card[selectedDeck] - colorPerformance[selectedDeck]
+                    : undefined
+                }
+                colorPerformance={colorPerformance}
+              />
             </li>
           ))}
       </ul>
@@ -138,6 +160,22 @@ export const getStaticProps: GetStaticProps = async () => {
   );
   return {
     props: {
+      colorPerformance: (await colorPerformance())
+        .filter((perf) => perf?.color_name?.match(/\((.+)\)/)?.[1].length === 2)
+        .reduce(
+          (prev, curr) => ({
+            ...prev,
+            [curr.color_name
+              .match(/\((.+)\)/)[1]
+              .split("")
+              .sort((a, b) => {
+                const order = "WUBRG";
+                return order.indexOf(a) - order.indexOf(b);
+              })
+              .join("")]: curr.wins / curr.games,
+          }),
+          {}
+        ),
       cardRatings: (await cardRatings()).map((c, i) => ({
         ...c,
         ...decks.reduce(

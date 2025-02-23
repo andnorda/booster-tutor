@@ -7,13 +7,13 @@ interface CardRatingsQueryParams {
 
 export const colorPerformance: (
   params?: CardRatingsQueryParams
-) => Promise<ColorPerformance[]> = async ({ expansion = "MOM" } = {}) => {
+) => Promise<ColorPerformance[]> = async ({ expansion = "DSK" } = {}) => {
   const query = queryString.stringify({
     expansion,
     event_type: "PremierDraft",
     combine_splash: true,
-    start_date: "2023-04-18",
-    end_date: "2023-06-19",
+    start_date: "2024-09-24",
+    end_date: "2024-10-03",
   });
 
   return await cache(query, async () => {
